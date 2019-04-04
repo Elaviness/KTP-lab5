@@ -24,13 +24,22 @@ def create_post(request):
                 'text': request.POST["text"],
                 'title': request.POST["title"]
             }
-            if form["text"] and form["title"]:
-                Article.objects.create(text=form["text"],
+            art = None
+            try:
+                 art = Article.objects.get(title=form["title"])
+                 print (u"Такое название уже есть!")
+            except Article.DoesNotExist:
+                 print (u"Совпадений по названию не найдено.")
+            if form["text"] and form["title"] and art is None:
+                art = Article.objects.create(text=form["text"],
                                         title=form["title"],
                                         author=request.user)
-                return redirect('get_article', article_id=article_id)
+                return redirect('get_article', article_id=art.id)
             else:
-                form['errors'] = u"Не все поля заполнены"
+                if art is not None:
+                    form['errors'] = u"Имя статьи не уникально"
+                else:
+                    form['errors'] = u"Не все поля заполнены"
                 return render(request, 'create_post.html', {'form': form})
         else:
             return render(request, 'create_post.html', {})
